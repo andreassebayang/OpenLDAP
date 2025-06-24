@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: openldap
+    restart: always
+    environment:
+      LDAP_ORGANISATION: "Aspitsme Homelab"
+      LDAP_DOMAIN: "aspitsme.internal"
+      LDAP_ADMIN_PASSWORD: P@ssw0rd  # Use strong password!!!!
+      LDAP_TLS: "true"
+      LDAP_TLS_CRT_FILENAME: server.10.66.40.8.cert.pem
+      LDAP_TLS_KEY_FILENAME: server.10.66.40.8.key.pem
+      LDAP_TLS_CA_CRT_FILENAME: ca.cert.pem
+
+    networks:
+      - ldapnet
+    volumes:
+      - ldap_data:/var/lib/ldap
+      - ldap_config:/etc/ldap/slapd.d
+      - ./certs:/container/service/slapd/assets/certs
+    labels:
+      - "traefik.enable=false"
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: phpldapadmin
+    restart: always
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: openldap
+     #PHPLDAPADMIN_LDAP_URI: ldap://openldap:389  <= if you want use not secure port
+      PHPLDAPADMIN_LDAP_URI: ldaps://openldap:636 # if you want use secure port
+      PHPLDAPADMIN_HTTPS: "true"
+      PHPLDAPADMIN_HTTPS_CRT_FILENAME: server.10.66.40.8.cert.pem
+      PHPLDAPADMIN_HTTPS_KEY_FILENAME: server.10.66.40.8.key.pem
+      PHPLDAPADMIN_HTTPS_CA_CRT_FILENAME: ca.cert.pem
+    ports:
+      - "8080:443"
+    depends_on:
+      - openldap
+    networks:
+      - ldapnet
+    volumes:
+      - ./certs:/container/service/phpldapadmin/assets/apache2/certs
+      - ./certs/ca.crt.pem:/container/service/ldap-client/assets/certs/ca.cert.pem
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpldapadmin.rule=Host(`ldap-ui.aspitsme.internal`)"
+      - "traefik.http.routers.phpldapadmin.entrypoints=websecure"
+      - "traefik.http.routers.phpldapadmin.tls=true"
+      - "traefik.http.routers.phpldapadmin.tls.certresolver=default"
+      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://login.aspitsme.internal"
+      - "traefik.http.middlewares.authelia.forwardauth.trustforwardheader=true"
+      - "traefik.http.middlewares.authelia.forwardauth.authresponseheaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      - "traefik.http.routers.phpldapadmin.middlewares=authelia@docker"
+
+networks:
+  ldapnet:
+    driver: bridge
+
+volumes:
+  ldap_data:
+  ldap_config:
