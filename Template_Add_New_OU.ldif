@@ -1,0 +1,4 @@
+dn: ou=NamaUnit,dc=aspitsme,dc=internal
+objectClass: organizationalUnit
+objectClass: top
+ou: NamaUnit
