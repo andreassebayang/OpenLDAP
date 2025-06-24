@@ -1,0 +1,13 @@
+dn: uid=USERNAME,ou=People,dc=aspitsme,dc=internal
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+cn: Nama Lengkap
+sn: NamaBelakang
+uid: USERNAME
+uidNumber: 10001
+gidNumber: 100
+homeDirectory: /home/USERNAME
+loginShell: /bin/bash
+mail: email@example.com
+userPassword: {SSHA}HASHED_PASSWORD
