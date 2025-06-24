@@ -1,0 +1,6 @@
+dn: cn=GroupName,ou=Groups,dc=aspitsme,dc=internal
+objectClass: groupOfNames
+objectClass: top
+cn: GroupName
+member: uid=USERNAME1,ou=People,dc=aspitsme,dc=internal
+member: uid=USERNAME2,ou=People,dc=aspitsme,dc=internal
